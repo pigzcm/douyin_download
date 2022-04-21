@@ -1,0 +1,43 @@
+buildscript {
+    ext.kotlin_version = '1.4.21'
+    repositories {
+                maven {
+                    url = uri("https://dl.google.com/dl/android/maven2")
+                }
+                maven {
+                    url = uri("https://maven.aliyun.com/repository/central")
+                }
+                maven {
+                    url = uri("https://maven.aliyun.com/repository/jcenter")
+                }
+                maven {
+                    url = uri("https://maven.aliyun.com/repository/gradle-blugin")
+                }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.0.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+allprojects {
+    repositories {
+                // Use jcenter for resolving dependencies.
+                // You can declare any Maven/Ivy/file repository here.
+                maven {
+                    url = uri("https://dl.google.com/dl/android/maven2")
+                }
+                maven {
+                    url = uri("https://maven.aliyun.com/repository/central")
+                }
+                maven {
+                    url = uri("https://maven.aliyun.com/repository/jcenter")
+                }
+                maven {
+                    url = uri("https://maven.aliyun.com/repository/gradle-blugin")
+                }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
