@@ -24,6 +24,11 @@ object OkHttpUtil {
                 super.onResponse(call, response)
                 if (response.isSuccessful){
                     var i = response.request.url.encodedPath
+                    val index = i.indexOf("/share/video")
+                    if (index == -1){
+                        yfCall.onFailed("bad condition $response")
+                        return
+                    }
                     i = i.
                     substring(i.indexOf("/share/video"),i.length-1)
                             .substring("/share/video".length+1)
