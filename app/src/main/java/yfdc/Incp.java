@@ -6,7 +6,8 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import kotlin.jvm.internal.Intrinsics;
 import okhttp3.Response;
-public class Incp implements okhttp3.Interceptor{
+import yfdc.bytedance.download.App;
+public final class Incp implements okhttp3.Interceptor{
     private Incp(){
         super();
     }
@@ -16,20 +17,12 @@ public class Incp implements okhttp3.Interceptor{
         Intrinsics.checkParameterIsNotNull(chain,"chain");
         Response r = null;
         try {
-            okhttp3.Request req = chain.request();
-            final okhttp3.HttpUrl url = req.url();
-            if (!url.isHttps()){
-                okhttp3.HttpUrl nUrl =
-                url.newBuilder()
-                        .scheme("https")
-                        .port(443).build();
-                req = req.newBuilder().url(nUrl).build();
-                JsonObject o = new JsonObject();
-                o.addProperty("old",url.toString());
-                o.addProperty("new",nUrl.toString());
-                Log.d("incept",o.toString());
-            }
-            r = chain.proceed(chain.request());
+            final okhttp3.Request req = chain.request();
+            final okhttp3.Request.Builder bd = req.newBuilder();
+            bd.removeHeader("User-Agent");
+            bd.removeHeader("Cookie");
+            bd.addHeader("User-Agent", App.USER_AGENT);
+            r = chain.proceed(bd.build());
             if (r.isRedirect()){
                 String location = r.header("location","");
                 if (TextUtils.isEmpty(location)){
@@ -85,7 +78,7 @@ public class Incp implements okhttp3.Interceptor{
         }catch (Throwable ex){
             ex.printStackTrace(System.out);
         }
-        Intrinsics.checkNotNull(r);
+        Intrinsics.checkNotNull(r, "bad condition");
         return java.util.Objects.requireNonNull(r);
     }
 }
