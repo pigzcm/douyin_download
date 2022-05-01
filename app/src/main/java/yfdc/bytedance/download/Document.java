@@ -33,6 +33,21 @@ public final class Document extends ActivityResultContract<@NotNull String,
 		return intent;
 	}
 
+	@NotNull
+	public static Intent createIntent0(@NotNull final Context context, @NotNull final String input) {
+		return INSTANCE.createIntent(context, input);
+	}
+
+	@Nullable
+	public static Uri parseResult0(int resultCode, @Nullable final Intent intent) {
+		return INSTANCE.parseResult(resultCode, intent);
+	}
+
+	@Nullable
+	public static SynchronousResult<Uri> getSynchronousResult0() {
+		return null;
+	}
+
 	@Nullable
 	@Override
 	public final SynchronousResult<Uri> getSynchronousResult(@NonNull Context context, String input) {
