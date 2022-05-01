@@ -1,7 +1,5 @@
 package yfdc.bytedance.download
 
-import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.util.Log
@@ -10,6 +8,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -17,8 +16,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import okhttp3.HttpUrl
-import yfdc.LogServConnection
-import yfdc.LogService
 import yfdc.LogUtil
 import yfdc.YFCallBack
 
@@ -29,7 +26,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
     private var logUtil:LogUtil? = null
-    override fun onCreate(var0: android.os.Bundle?) {
+    private lateinit var openDocumentLauncher:ActivityResultLauncher<String>
+    final override fun onCreate(var0: android.os.Bundle?) {
         super.onCreate(var0)
         logUtil = LogUtil.getInstance(this)
         screen()
@@ -38,6 +36,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setListener(findViewById(R.id.id_btn_download))
         setListener(findViewById(R.id.id_btn_log))
         setListener(findViewById(R.id.id_btn_decode))
+        this.openDocumentLauncher = registerForActivityResult(Document.INSTANCE) {
+            if (it !== null) {
+                val request = okhttp3.Request.Builder()
+                        .header("User-Agent", App.USER_AGENT)
+                        .addHeader("User-Agent", App.USER_AGENT)
+                        .url(downloadUrl?:"https://m.baidu.com")
+                        .get().build()
+                DownloadDialog(this@MainActivity, it, request).show()
+            }
+        }
     }
 
     private var result: TextView? = null
@@ -67,21 +75,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onRestart() {
         super.onRestart()
         screen()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 0xcafe) {
-            if (resultCode == RESULT_OK) {
-                val uri = data!!.data!!
-                val request = okhttp3.Request.Builder()
-                        .header("User-Agent", App.USER_AGENT)
-                        .addHeader("User-Agent", App.USER_AGENT)
-                        .url(downloadUrl!!)
-                        .get().build()
-                DownloadDialog(this, uri, request).show()
-            }
-        }
     }
 
     override fun onResume() {
@@ -150,10 +143,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                                 _this.findViewById<EditText>(R.id.txt_share_string)!!.setText("")
                                                 result?.append("download url:$url")
                                                 logUtil?.Log("$url")
-                                                _this.startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT)
-                                                        .addCategory(Intent.CATEGORY_OPENABLE)
-                                                        .putExtra(Intent.EXTRA_TITLE, "save.mp4")
-                                                        .setType("video/mp4"), 0xcafe)
+                                                openDocumentLauncher.launch("save.mp4")
                                             }
                                             synchronized(_this) {
                                                 _this.downloadUrl = url.toString()
