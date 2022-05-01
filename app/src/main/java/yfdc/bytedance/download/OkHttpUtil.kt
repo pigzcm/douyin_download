@@ -1,83 +1,65 @@
 package yfdc.bytedance.download
+
 import yfdc.YFCallBack
 import android.util.Log
-import okhttp3.Call
-import okhttp3.Response
 import okhttp3.internal.closeQuietly
-import yfdc.Task
-import java.io.IOException
+import yfdc.MyAsyncTask
 object OkHttpUtil {
     @JvmField
     val ERR: String = "ERR"
+
     @JvmStatic
-    fun get302Url(url: String, yfCall:YFCallBack):Task {
-        val task = object : Task() {
-            override fun onFailure(call: Call, e: IOException) {
-                super.onFailure(call, e)
-                Log.e(ERR, "network failed")
-                val v0 = java.io.StringWriter()
-                val v1 = java.io.PrintWriter(v0)
-                e.printStackTrace(v1)
-                yfCall.onFailed(v0.toString())
-            }
-            override fun onResponse(call: Call, response: Response) {
-                super.onResponse(call, response)
-                if (response.isSuccessful){
-                    var i = response.request.url.encodedPath
-                    val index = i.indexOf("/share/video")
-                    if (index == -1){
-                        yfCall.onFailed("bad condition $response")
-                        return
-                    }
-                    i = i.
-                    substring(i.indexOf("/share/video"),i.length-1)
-                            .substring("/share/video".length+1)
-                    yfCall.onSuccess(i)
-                    //response.request.url.encodedPath
-                } else {
-                    yfCall.onFailed("response bad with ${response.code}")
-                }
-            }
-        }
+    fun get302Url(url: String, yfCall: YFCallBack): MyAsyncTask {
         val req = okhttp3.Request.Builder()
                 .url(url)
                 .get()
                 .header("User-Agent", App.USER_AGENT)
                 .addHeader("User-Agent", App.USER_AGENT)
                 .build()
-        App.getClient().newCall(req).enqueue(task)
-        return task
+        return MyAsyncTask.execute(req,
+                {
+                    val path = "/share/video"
+                    if (it.isSuccessful && it.request.url.encodedPath.indexOf(path) != -1) {
+                        var i = it.request.url.encodedPath
+                        i = i.substring(i.indexOf(path), i.length - 1)
+                                .substring(path.length + 1)
+                        yfCall.onSuccess(i)
+                    } else {
+                        yfCall.onFailed("response bad with ${it.code}")
+                    }
+                }, {
+            Log.e(ERR, "network failed")
+            val v0 = java.io.StringWriter()
+            val v1 = java.io.PrintWriter(v0)
+            it.printStackTrace(v1)
+            yfCall.onFailed(v0.toString())
+        })
     }
+
     @JvmStatic
-    fun getVideoUrl(url: String,yfCall: YFCallBack):Task{
-        val task:Task = object :Task(){
-            override fun onFailure(call: Call, e: IOException) {
-                super.onFailure(call, e)
-                Log.e(ERR, "network failed")
-                val v0 = java.io.StringWriter()
-                val v1 = java.io.PrintWriter(v0)
-                e.printStackTrace(v1)
-                yfCall.onFailed(v0.toString())
-            }
-            override fun onResponse(call: Call, response: Response) {
-                super.onResponse(call, response)
-                if (response.isSuccessful && response.body !== null){
-                    val res:String = response.body!!.string()
-                    response.body?.closeQuietly()
-                    response.closeQuietly()
-                    yfCall.onSuccess(res)
-                } else {
-                    yfCall.onFailed("response bad code ${response.code} \nor empty body.")
-                }
-            }
-        }
+    fun getVideoUrl(url: String, yfCall: YFCallBack): MyAsyncTask {
         val req = okhttp3.Request.Builder()
                 .url(url)
-                .header("User-Agent",App.USER_AGENT)
-                .addHeader("User-Agent",App.USER_AGENT)
+                .header("User-Agent", App.USER_AGENT)
+                .addHeader("User-Agent", App.USER_AGENT)
                 .get()
                 .build()
-        App.getClient().newCall(req).enqueue(task)
-        return task;
+        return MyAsyncTask.execute(req, {
+            if (it.isSuccessful && it.body !== null) {
+                val body: okhttp3.ResponseBody = it.body ?: error("empty body")
+                val res: String = body.string()
+                body.closeQuietly()
+                it.closeQuietly()
+                yfCall.onSuccess(res)
+            } else {
+                yfCall.onFailed("response bad code ${it.code} \nor empty body.")
+            }
+        }, {
+            Log.e(ERR, "network failed")
+            val v0 = java.io.StringWriter()
+            val v1 = java.io.PrintWriter(v0)
+            it.printStackTrace(v1)
+            yfCall.onFailed(v0.toString())
+        })
     }
 }

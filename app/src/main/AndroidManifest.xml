@@ -15,7 +15,6 @@
         android:fullBackupContent="@null"
         android:theme="@style/AppTheme">
         <service android:name="yfdc.LogService"
-            android:process=":remote"
             android:exported="true"/>
         <activity android:name=".MainActivity"
             android:screenOrientation="portrait"

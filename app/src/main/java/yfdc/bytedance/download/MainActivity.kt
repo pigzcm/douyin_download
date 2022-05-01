@@ -17,6 +17,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import okhttp3.HttpUrl
 import yfdc.LogUtil
+import yfdc.MyAsyncTask
 import yfdc.YFCallBack
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -29,7 +30,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var openDocumentLauncher:ActivityResultLauncher<String>
     final override fun onCreate(var0: android.os.Bundle?) {
         super.onCreate(var0)
-        logUtil = LogUtil.getInstance(this)
+        logUtil = LogUtil.getInstance(this).apply {
+            start()
+        }
         screen()
         setContentView(R.layout.activity_main)
         result = findViewById(R.id.result)
@@ -38,6 +41,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setListener(findViewById(R.id.id_btn_decode))
         this.openDocumentLauncher = registerForActivityResult(Document.INSTANCE) {
             if (it !== null) {
+                logUtil?.Log("uri:$it")
                 val request = okhttp3.Request.Builder()
                         .header("User-Agent", App.USER_AGENT)
                         .addHeader("User-Agent", App.USER_AGENT)
@@ -84,6 +88,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        logUtil?.stop()
         kotlin.system.exitProcess(0)
     }
 
@@ -109,7 +114,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     decode = yfdc.Util.decodeShare(decode)
                     val condition = decode.startsWith("http://").or(decode.startsWith("https://"))
                     if (condition) {
-                        OkHttpUtil.get302Url(decode, object : YFCallBack {
+                        var c1:MyAsyncTask? = null
+                        var c2:MyAsyncTask? = null
+                        c1 = OkHttpUtil.get302Url(decode, object : YFCallBack {
                             override fun onSuccess(s: String) {
                                 toApp = "found url ${App.API}$s"
                                 _this.runOnUiThread {
@@ -117,8 +124,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 }
                                 logUtil?.Log(toApp)
                                 Log.d("YFDC", toApp)
-                                OkHttpUtil.getVideoUrl("${App.API}$s", object : YFCallBack {
+                                c2 = OkHttpUtil.getVideoUrl("${App.API}$s", object : YFCallBack {
                                     override fun onSuccess(s: String) {
+                                        c2?.let {
+                                            Log.d("HTTP-C2",it.response.toString())
+                                        }
                                         val gson = GsonBuilder()
                                                 .serializeNulls()
                                                 .disableHtmlEscaping().create()
@@ -153,6 +163,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                     }
 
                                     override fun onFailed(s: String) {
+                                        c2?.let {
+                                            Log.d("HTTP-C2",it.error.toString())
+                                        }
                                         _this.runOnUiThread {
                                             _this.downloadUrl = null
                                             result?.run {
@@ -174,12 +187,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 Log.e("ERR", s)
                             }
                         })
+                        c1.let {
+                            Log.d("DH-C1",it.toString())
+                            logUtil?.Log(it.toString())
+                        }
+                        c2?.let {
+                            Log.d("DH-C2",it.toString())
+                            logUtil?.Log(it.toString())
+                        }
                     }
                     toApp = "after decode:$decode"
                     _this.runOnUiThread {
                         result?.append("\n$toApp\n")
                     }
                     Log.d("YFDC", toApp)
+
                 } else {
                     result?.text = ""
                     toApp = "decode str length(${decode.length}) to low:$decode"
