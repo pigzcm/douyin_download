@@ -65,8 +65,8 @@ public final class FileDownloadThread extends Thread {
                 }
                 total = (int) totalL;
             }
-            //while ((ch = stream.read(buf, 0, 1024)) != (-1)) {
-            long start = System.currentTimeMillis();
+            // while ((ch = stream.read(buf, 0, 1024)) != (-1)) {
+            // long start = System.currentTimeMillis();
             while ((ch = readMy(stream, buf)) != (-1)) {
                 out.write(buf, 0, ch);
                 position += ch;

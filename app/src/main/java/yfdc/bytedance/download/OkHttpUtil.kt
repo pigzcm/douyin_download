@@ -14,7 +14,6 @@ object OkHttpUtil {
                 .url(url)
                 .get()
                 .header("User-Agent", App.USER_AGENT)
-                .addHeader("User-Agent", App.USER_AGENT)
                 .build()
         return MyAsyncTask.execute(req,
                 {
@@ -41,7 +40,6 @@ object OkHttpUtil {
         val req = okhttp3.Request.Builder()
                 .url(url)
                 .header("User-Agent", App.USER_AGENT)
-                .addHeader("User-Agent", App.USER_AGENT)
                 .get()
                 .build()
         return MyAsyncTask.execute(req, {

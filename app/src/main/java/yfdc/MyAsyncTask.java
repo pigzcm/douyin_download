@@ -1,7 +1,7 @@
 package yfdc;
 
+import android.util.Log;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -19,8 +19,11 @@ import kotlin.jvm.internal.Intrinsics;
 import okhttp3.Request;
 import okhttp3.Response;
 import yfdc.bytedance.download.App;
+import yfdc.gson.OkhttpRequest;
+import yfdc.gson.OkhttpResponse;
 
 public abstract class MyAsyncTask implements Runnable {
+	private static final String TAG = MyAsyncTask.class.getSimpleName();
 	public static @NotNull MyAsyncTask execute(@NotNull Request req, @NotNull Good good, @NotNull Bad bad) {
 		Intrinsics.checkParameterIsNotNull(req, "req");
 		Intrinsics.checkParameterIsNotNull(good, "good");
@@ -55,7 +58,7 @@ public abstract class MyAsyncTask implements Runnable {
 			element.add("headers", headers);
 			return element;
 		}
-		final Gson gson = new GsonBuilder().serializeNulls().disableHtmlEscaping().create();
+		final Gson gson = yfdc.Util.getGson();
 		try{
 			final String v1 = gson.toJson(oh, oh.getClass());
 			final JsonElement element = gson.fromJson(v1, JsonElement.class);
@@ -114,10 +117,12 @@ public abstract class MyAsyncTask implements Runnable {
 		final Request req = getRequest();
 		Intrinsics.checkNotNull(req, "getRequest() returns null");
 		java.util.Objects.requireNonNull(req);
+		Log.d(TAG, "request: " + OkhttpRequest.INSTANCE.toJson(req));
 		final okhttp3.Call call = App.getClient().newCall(req);
 		try {
 			final Response r = call.execute();
 			Intrinsics.checkNotNullExpressionValue(r, "call.execute()");
+			Log.d(TAG, "response: " + OkhttpResponse.INSTANCE.toJson(r));
 			java.util.Objects.requireNonNull(r);
 			good.onGood(r);
 			this.response = r;

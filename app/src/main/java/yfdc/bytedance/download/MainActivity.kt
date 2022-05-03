@@ -18,7 +18,10 @@ import com.google.gson.JsonPrimitive
 import okhttp3.HttpUrl
 import yfdc.LogUtil
 import yfdc.MyAsyncTask
+import yfdc.Util
 import yfdc.YFCallBack
+import java.util.TimerTask
+import java.util.Timer
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun screen() {
@@ -26,8 +29,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
-    private var logUtil:LogUtil? = null
-    private lateinit var openDocumentLauncher:ActivityResultLauncher<String>
+
+    private var logUtil: LogUtil? = null
+    private lateinit var openDocumentLauncher: ActivityResultLauncher<String>
     final override fun onCreate(var0: android.os.Bundle?) {
         super.onCreate(var0)
         logUtil = LogUtil.getInstance(this).apply {
@@ -44,8 +48,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 logUtil?.Log("uri:$it")
                 val request = okhttp3.Request.Builder()
                         .header("User-Agent", App.USER_AGENT)
-                        .addHeader("User-Agent", App.USER_AGENT)
-                        .url(downloadUrl?:"https://m.baidu.com")
+                        // .addHeader("User-Agent", App.USER_AGENT)
+                        .url(downloadUrl ?: "https://m.baidu.com")
                         .get().build()
                 DownloadDialog(this@MainActivity, it, request).show()
             }
@@ -94,6 +98,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     @Volatile
     private var downloadUrl: String? = null
+    private var date:java.util.Date = java.util.Date()
+    private var dateSdf:java.text.SimpleDateFormat =
+            java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss",
+                    java.util.Locale.ENGLISH)
     @Volatile
     private var downloadCall: okhttp3.Call? = null;
     public final override fun onClick(v: View?) {
@@ -114,24 +122,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     decode = yfdc.Util.decodeShare(decode)
                     val condition = decode.startsWith("http://").or(decode.startsWith("https://"))
                     if (condition) {
-                        var c1:MyAsyncTask? = null
-                        var c2:MyAsyncTask? = null
+                        var c1: MyAsyncTask? = null
+                        var c2: MyAsyncTask? = null
                         c1 = OkHttpUtil.get302Url(decode, object : YFCallBack {
                             override fun onSuccess(s: String) {
                                 toApp = "found url ${App.API}$s"
                                 _this.runOnUiThread {
-                                    result?.append("\n$toApp\n")
+                                    result?.append("$toApp\n")
                                 }
                                 logUtil?.Log(toApp)
                                 Log.d("YFDC", toApp)
                                 c2 = OkHttpUtil.getVideoUrl("${App.API}$s", object : YFCallBack {
                                     override fun onSuccess(s: String) {
                                         c2?.let {
-                                            Log.d("HTTP-C2",it.response.toString())
+                                            Log.d("HTTP-C2", it.response.toString())
                                         }
-                                        val gson = GsonBuilder()
-                                                .serializeNulls()
-                                                .disableHtmlEscaping().create()
+                                        val gson = Util.getGson()
                                         var obj: JsonObject = gson.fromJson<JsonObject>(s, JsonObject::class.java)!!
                                         if (obj.has("status_code") && !obj["status_code"].isJsonNull) {
                                             val st = obj.getAsJsonPrimitive("status_code").asInt
@@ -141,19 +147,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                             obj = obj.getAsJsonArray("item_list")[0].asJsonObject
                                             obj = obj["video"].asJsonObject
                                             val vid: String = obj.getAsJsonPrimitive("vid").asString
-                                            val ratio: String? = (obj["ratio"] as JsonPrimitive?)?.asString
+                                            var ratio: String? = (obj["ratio"] as JsonPrimitive?)?.asString
+                                            if (ratio !== null) {
+                                                val rp = ratio.substring(0, ratio.length-1).toInt()
+                                                if (rp < 720){
+                                                    ratio = "720p"
+                                                }
+                                            }
                                             val url: HttpUrl = VideoUrl().setParam(vid, ratio).create()
                                             Log.d("SUCCESS", url.toString())
                                             val request = okhttp3.Request.Builder()
                                                     .header("User-Agent", App.USER_AGENT)
-                                                    .addHeader("User-Agent", App.USER_AGENT)
+                                                    // .addHeader("User-Agent", App.USER_AGENT)
                                                     .url(url)
                                                     .get().build()
                                             _this.runOnUiThread {
                                                 _this.findViewById<EditText>(R.id.txt_share_string)!!.setText("")
                                                 result?.append("download url:$url")
                                                 logUtil?.Log("$url")
-                                                openDocumentLauncher.launch("save.mp4")
+                                                date.time = System.currentTimeMillis()
+                                                openDocumentLauncher.launch("${dateSdf.format(date)}_save.mp4")
                                             }
                                             synchronized(_this) {
                                                 _this.downloadUrl = url.toString()
@@ -164,7 +177,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                                     override fun onFailed(s: String) {
                                         c2?.let {
-                                            Log.d("HTTP-C2",it.error.toString())
+                                            Log.d("HTTP-C2", it.error.toString())
                                         }
                                         _this.runOnUiThread {
                                             _this.downloadUrl = null
@@ -188,11 +201,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             }
                         })
                         c1.let {
-                            Log.d("DH-C1",it.toString())
+                            Log.d("DH-C1", it.toString())
                             logUtil?.Log(it.toString())
                         }
                         c2?.let {
-                            Log.d("DH-C2",it.toString())
+                            Log.d("DH-C2", it.toString())
                             logUtil?.Log(it.toString())
                         }
                     }
@@ -228,17 +241,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun download() {
-        val activity:MainActivity = this;
+        val btn = findViewById<android.widget.Button>(R.id.id_btn_download)!!
+        val activity: MainActivity = this;
         if (downloadUrl.isNullOrEmpty()) {
             Toast.makeText(this, "", Toast.LENGTH_SHORT)
                     .apply { setText("请先解析") }.show()
         } else {
-            val download:String = downloadUrl!!
+            btn.isEnabled = false
+            val download: String = downloadUrl!!
             Log.d("YFDC", "click download")
             Toast.makeText(this, "", Toast.LENGTH_SHORT)
                     .apply { setText(downloadUrl) }.show()
             downloadUrl = null;
-            val path:String = this.getExternalFilesDir(null)!!.absolutePath
+            val path: String = this.getExternalFilesDir(null)!!.absolutePath
             val file = yfdc.FileUtil.makeFile("$path/save.mp4")
             val fileStream = yfdc.FileUtil.stream(file)
             FileDownloadThread().apply {
@@ -246,26 +261,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 this.request = okhttp3.Request.Builder()
                         .url(download)
                         .get().build()
-                this.init(object:FileDownloadThread.CallBack{
+                this.init(object : FileDownloadThread.CallBack {
                     override fun onSucceed() {
-                        val btn = activity.findViewById<android.widget.Button>(R.id.id_btn_download)!!
                         activity.runOnUiThread {
                             btn.setText(R.string.str_download)
                             btn.isEnabled = true
                             activity.result?.append("\n下载成功\n")
                         }
                     }
+
                     override fun onProgress(percent: String) {
-                        val btn = activity.findViewById<android.widget.Button>(R.id.id_btn_download)!!
                         var s = percent
-                        s = activity.resources.getString(R.string.str_download_rate,s)
+                        s = activity.resources.getString(R.string.str_download_rate, s)
                         activity.runOnUiThread {
                             btn.isEnabled = false
                             btn.text = s;
                         }
                     }
+
                     override fun onError(error: Throwable) {
-                        val btn = activity.findViewById<android.widget.Button>(R.id.id_btn_download)!!
                         activity.runOnUiThread {
                             btn.text = "下载失败"
                             btn.isEnabled = true
@@ -273,6 +287,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             val w2 = java.io.PrintWriter(w1)
                             error.printStackTrace(w2)
                             activity.result?.append("\n$w1")
+                            val timer: Timer = Timer()
+                            timer.schedule(object : TimerTask() {
+                                override fun run() {
+                                    btn.setText(R.string.str_download)
+                                    timer.cancel()
+                                }
+                            }, 5000L)
                         }
                     }
                 })

@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import kotlin.jvm.internal.Intrinsics;
 import okhttp3.Response;
-import yfdc.bytedance.download.App;
+import yfdc.gson.OkhttpRequest;
 public final class Incp implements okhttp3.Interceptor{
     private Incp(){
         super();
@@ -19,9 +19,18 @@ public final class Incp implements okhttp3.Interceptor{
         try {
             final okhttp3.Request req = chain.request();
             final okhttp3.Request.Builder bd = req.newBuilder();
-            bd.removeHeader("User-Agent");
+            Log.w("request", OkhttpRequest.INSTANCE.toJson(req));
+            // bd.removeHeader("User-Agent");
             bd.removeHeader("Cookie");
-            bd.addHeader("User-Agent", App.USER_AGENT);
+            // bd.addHeader("User-Agent", App.USER_AGENT);
+            final java.util.Iterator<kotlin.Pair<String, String>> it0 = req.headers().iterator();
+            while (it0.hasNext()){
+                kotlin.Pair<String, String> pair = it0.next();
+                JsonObject o = new JsonObject();
+                o.addProperty("key", pair.getFirst());
+                o.addProperty("value", pair.getSecond());
+                Log.d("YFDC", "_req_header_ " + o.toString());
+            }
             r = chain.proceed(bd.build());
             if (r.isRedirect()){
                 String location = r.header("location","");
