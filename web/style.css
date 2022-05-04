@@ -1,0 +1,30 @@
+*{
+    margin: 0px;
+    padding: 0px;
+}
+textarea#yfdc{
+    display: block;
+    width: 85%;
+    height: 200px;
+    overflow: auto;
+    margin: 12px;
+    word-break: break-all;
+}
+button{
+    margin-left: 12px;
+}
+div#result{
+    word-break: break-all;
+    display: block;
+    width: 85%;
+    height: 200px;
+    overflow: auto;
+    margin: 12px;
+    border: 1px solid black;
+    border-radius: 8px;
+}
+video#player{
+    display: block;
+    width: 85%;
+    margin: 12px;
+}

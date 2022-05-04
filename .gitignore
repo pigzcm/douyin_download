@@ -3,3 +3,7 @@
 /.gradle
 /.idea
 /local.properties
+/web/node_modules
+/web/package-lock.json
+web/tmp.mp4
+web/tmp.rawhttp

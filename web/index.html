@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta name="referer" content="never">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抖音下载</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <div>
+        <textarea id="yfdc"></textarea>
+        <button id="download">download</button>
+        <button id="clear">clear</button>
+        <div id="result"></div>
+        <div id="video_play">
+            <button id="go_new">go new</button>
+            <video id="player" controls="controls">
+            </video>
+        </div>
+    </div>
+    <script src="./jquery.js"></script>
+    <script src="./script.js"></script>
+    <script type="text/javascript">
+        function video(url) {
+            let videosrc = 'http://[::1]:1024/video?url=' + url.toUrl();
+            console.log('src===', videosrc)
+            let video = jQuery("video#player");
+            video.attr('src', videosrc);
+            localStorage.setItem('video', videosrc);
+            try {
+                video[0].play().then(() => {
+                    console.log('play')
+                }).catch((e) => {
+                    console.log('play')
+                })
+            } catch (_) { }
+        }
+        (function () {
+            const request = $('textarea#yfdc')
+            const result = $('div#result');
+            const API = "http://[::1]:1024/api?id="
+            $("button#clear").on('click', e => {
+                request.val('')
+                result.html('')
+            });
+            $("button#download").on('click', function (e) {
+                let douyin = request.val().douyin();
+                result.append("find url:" + douyin + "<br>");
+                if (douyin.length <= 2) {
+                    result.append("bad url<br>")
+                    return false;
+                }
+                $.ajax('http://[::1]:1024/api', {
+                    method: 'POST',
+                    contentType: 'text/plain;charset=utf-8',
+                    data: douyin,
+                    success: function (res) {
+                        if (res.code == 0) {
+                            let path = res['data']['path'];
+                            if (path.length > 0) {
+                                let vid_num = path.substring(1, path.length - 1);
+                                result.append("shere id:" + vid_num + "<br>")
+                                $.ajax(API + vid_num, {
+                                    method: 'GET',
+                                    success(res) {
+                                        window.douyinobj = res;
+                                        localStorage.setItem('o', JSON.stringify(res))
+                                        let url = res.item_list[0].video.play_addr.url_list[0]
+                                        video(url);
+                                    },
+                                    error(err) {
+                                        console.log(err)
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    error: function (err) {
+                        console.log(err)
+                    }
+                })
+            });
+        })();
+    </script>
+</body>
+
+</html>

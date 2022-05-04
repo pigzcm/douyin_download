@@ -290,7 +290,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                             val timer: Timer = Timer()
                             timer.schedule(object : TimerTask() {
                                 override fun run() {
-                                    btn.setText(R.string.str_download)
+                                    activity.runOnUiThread{
+                                        btn.setText(R.string.str_download)
+                                    }
                                     timer.cancel()
                                 }
                             }, 5000L)
