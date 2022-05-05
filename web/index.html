@@ -26,9 +26,11 @@
     <script src="./jquery.js"></script>
     <script src="./script.js"></script>
     <script type="text/javascript">
+        window.host=window.location.hostname
         function video(url) {
-            let videosrc = 'http://[::1]:1024/video?url=' + url.toUrl();
+            let videosrc = 'http://'+host+':1024/video?url=' + url.toUrl();
             console.log('src===', videosrc)
+            window.videosrc = videosrc;
             let video = jQuery("video#player");
             video.attr('src', videosrc);
             localStorage.setItem('video', videosrc);
@@ -43,19 +45,25 @@
         (function () {
             const request = $('textarea#yfdc')
             const result = $('div#result');
-            const API = "http://[::1]:1024/api?id="
+            const API = "http://"+host+":1024/api?id="
             $("button#clear").on('click', e => {
                 request.val('')
                 result.html('')
             });
+            $('button#go_new').on('click',e=>{
+                var go = window['videosrc'];
+                if (go !== undefined){
+                    location.href = go;
+                }
+            })
             $("button#download").on('click', function (e) {
                 let douyin = request.val().douyin();
-                result.append("find url:" + douyin + "<br>");
+                result.append("find url:" + douyin +host+ "<br>");
                 if (douyin.length <= 2) {
                     result.append("bad url<br>")
                     return false;
                 }
-                $.ajax('http://[::1]:1024/api', {
+                $.ajax('http://'+host+':1024/api', {
                     method: 'POST',
                     contentType: 'text/plain;charset=utf-8',
                     data: douyin,

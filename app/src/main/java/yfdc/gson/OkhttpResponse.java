@@ -22,7 +22,7 @@ public final class OkhttpResponse extends TypeAdapter<Response> {
 		super();
 	}
 
-	public static OkhttpResponse INSTANCE = (new OkhttpResponse());
+	public static final OkhttpResponse INSTANCE = (new OkhttpResponse());
 
 	@Contract("null -> new")
 	@NotNull

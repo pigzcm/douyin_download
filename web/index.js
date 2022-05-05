@@ -163,6 +163,11 @@ function download(file, target, handle) {
         let test = true;
         if (test) {
             let url0 = req.query['url'];
+            if (url0 === undefined){
+                res.status(404).write('Not found')
+                res.end()
+                return;
+            }
             let parsed = url.parseURL(url0);
             let download = request(url0,{
                 'headers':{
@@ -194,9 +199,9 @@ function download(file, target, handle) {
             })
         }
     })
-    let server = app.listen(1024, '::1', () => {
+    let server = app.listen(1024,'', () => {
         let host = server.address().address
         let port = server.address().port
-        console.log("应用实例，访问地址为 http://[%s]:%s", host, port)
+        console.log("应用实例，访问地址为 http://%s:%s", host, port)
     });
 })();
