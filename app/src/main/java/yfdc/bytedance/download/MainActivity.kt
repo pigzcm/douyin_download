@@ -134,11 +134,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 Log.d("YFDC", toApp)
                                 c2 = OkHttpUtil.getVideoUrl("${App.API}$s", object : YFCallBack {
                                     override fun onSuccess(s: String) {
-                                        c2?.let {
-                                            Log.d("HTTP-C2", it.response.toString())
+                                        var obj: JsonObject = try{
+                                            com.google.gson.internal.bind.TypeAdapters.JSON_ELEMENT.fromJson(s)!! as JsonObject
+                                        }catch (e:Throwable){
+                                            e.printStackTrace(System.out)
+                                            JsonObject()
                                         }
-                                        val gson = Util.getGson()
-                                        var obj: JsonObject = gson.fromJson<JsonObject>(s, JsonObject::class.java)!!
                                         if (obj.has("status_code") && !obj["status_code"].isJsonNull) {
                                             val st = obj.getAsJsonPrimitive("status_code").asInt
                                             if (st != 0) {
@@ -176,9 +177,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                     }
 
                                     override fun onFailed(s: String) {
-                                        c2?.let {
-                                            Log.d("HTTP-C2", it.error.toString())
-                                        }
+                                        
                                         _this.runOnUiThread {
                                             _this.downloadUrl = null
                                             result?.run {
@@ -200,14 +199,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 Log.e("ERR", s)
                             }
                         })
-                        c1.let {
-                            Log.d("DH-C1", it.toString())
-                            logUtil?.Log(it.toString())
-                        }
-                        c2?.let {
-                            Log.d("DH-C2", it.toString())
-                            logUtil?.Log(it.toString())
-                        }
                     }
                     toApp = "after decode:$decode"
                     _this.runOnUiThread {

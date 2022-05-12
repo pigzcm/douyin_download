@@ -34,7 +34,7 @@ public abstract class MyAsyncTask implements Runnable {
 				return req;
 			}
 		};
-		EXECUTOR.execute(create);
+		EXECUTOR.submit(create);
 		return create;
 	}
 	private static JsonElement obj(@Nullable final Object oh){
