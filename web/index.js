@@ -78,7 +78,11 @@ function download(file, target, handle) {
         console.log(req.method + ' ' + req.url);
         //console.log(req.header('referer'))
         if (goon) {
-            next();
+            try{
+                next();
+            }catch(e){
+                console.log(e);
+            }
         }
     })
 
@@ -163,12 +167,17 @@ function download(file, target, handle) {
         let test = true;
         if (test) {
             let url0 = req.query['url'];
-            if (url0 === undefined){
+            if (url0 === undefined|| url0 === null){
                 res.status(404).write('Not found')
                 res.end()
                 return;
             }
             let parsed = url.parseURL(url0);
+            if(parsed === null||parsed === undefined){
+                res.status(404).write('Not found')
+                res.end()
+                return;
+            }
             let download = request(url0,{
                 'headers':{
                     'User-Agent':user_agent,

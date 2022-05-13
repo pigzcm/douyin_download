@@ -65,6 +65,7 @@ public final class FileDownloadThread extends Thread {
                 }
                 total = (int) totalL;
             }
+            android.util.Log.d("Thread", out.toString());
             // while ((ch = stream.read(buf, 0, 1024)) != (-1)) {
             // long start = System.currentTimeMillis();
             while ((ch = readMy(stream, buf)) != (-1)) {
@@ -118,12 +119,15 @@ public final class FileDownloadThread extends Thread {
                 Log.e("YDC",ex.toString(),ex);
                 ex.printStackTrace(System.out);
             } else {
-                e = ex.getCause();
+                e = ex;
                 do {
-                    e = e.getCause();
                     if (e != null){
                         Log.e("YFDC",e.getClass().getName()+':'+e.getMessage());
+                        for(StackTraceElement tracement:e.getStackTrace()){
+                            Log.e("YFDC","\tat "+tracement);
+                        }
                     }
+                    e = e.getCause();
                 }while ((e != null)&&!e.equals(e.getCause()));
             }
             throw new IllegalStateException("cafe babe", ex);

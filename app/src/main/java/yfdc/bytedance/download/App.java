@@ -1,12 +1,13 @@
 package yfdc.bytedance.download;
 import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.TimeUnit;
-
+import android.os.Build;
 import yfdc.Incp;
-
 public final class App extends android.app.Application {
     public App() {
         super();
+        android.util.Log.d("App", "abi "+ java.util.Arrays.toString(Build.SUPPORTED_ABIS));
+        android.util.Log.d("App", OkHttpUtil.build());
     }
     private volatile static okhttp3.OkHttpClient client = null;
     public static final String USER_AGENT = "Mozilla/5.0 (Linux; Android 11; PECM30) " +

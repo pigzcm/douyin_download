@@ -127,6 +127,21 @@ public abstract class MyAsyncTask implements Runnable {
 			good.onGood(r);
 			this.response = r;
 		} catch (Throwable ex0) {
+			Throwable e = null;
+			if (ex0.getCause() == null){
+				ex0.printStackTrace(System.out);
+			} else {
+				e = ex0;
+				do {
+					if (e != null){
+						Log.e("YFDC",e.getClass().getName()+':'+e.getMessage());
+						for(StackTraceElement tracement:e.getStackTrace()){
+							Log.e("YFDC","\tat "+tracement);
+						}
+					}
+					e = e.getCause();
+				}while ((e != null)&&!e.equals(e.getCause()));
+			}
 			bad.onBad(ex0);
 			this.ex = ex0;
 		}

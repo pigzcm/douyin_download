@@ -1,10 +1,58 @@
 package yfdc.bytedance.download
-
+import android.os.Build
 import yfdc.YFCallBack
 import android.util.Log
+import com.google.gson.JsonObject
 import okhttp3.internal.closeQuietly
 import yfdc.MyAsyncTask
+import yfdc.gson.CheckedException
+
+
 object OkHttpUtil {
+    @Suppress("UNCHECKED_CAST")
+    @JvmStatic private fun gh(f:Any?):String{
+        if(f === null){
+            return "null"
+        }
+        if(f.javaClass.isArray){
+            if((f as Array<*>).size == 0){
+                return "[]<empty>"
+            }
+            val bd = StringBuilder().append('[')
+            (f as Array<Any>).forEach {
+                bd.append(it).append(',')
+            }
+            if (bd[bd.lastIndex] != '[') {
+                bd.deleteCharAt(bd.lastIndex)
+            }
+            bd.append(']');
+            return bd.toString()
+        }else{
+            return f.toString();
+        }
+    }
+    @JvmStatic fun build():String{
+        try{
+            val build:Class<Build> = Build::class.java
+            val version:Class<Build.VERSION> = Build.VERSION::class.java
+            val fieleds = build.declaredFields.map {
+                it.isAccessible = true
+                it
+            }
+            val rtn = JsonObject()
+            fieleds.forEach{
+                rtn.addProperty(it.name, gh(it.get(build)))
+            }
+            val ver = JsonObject()
+            version.declaredFields.map { it.isAccessible=true;it }.forEach {
+                ver.addProperty(it.name, gh(it.get(version)))
+            }
+            rtn.add("__ghost",ver);
+            return rtn.toString()
+        }catch (e:Throwable){
+            throw CheckedException.getInstance(e);
+        }
+    }
     @JvmField
     val ERR: String = "ERR"
 

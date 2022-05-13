@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" formatted="false" translatable="false">" &#32; "</string>
+    <string name="app_name" formatted="false" translatable="false">"dydl"</string>
     <string name="str_decode" formatted="false" translatable="false">"解析"</string>
     <string name="str_download" formatted="false" translatable="false">"下载"</string>
     <string name="str_log" formatted="false" translatable="false">"Log"</string>
