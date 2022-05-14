@@ -3,6 +3,10 @@
 // 2.call `node ./index.js` 
 // or `npm run serve`
 // default part:1024
+'use strict';
+if(global === undefined|| global === null){
+    throw new Error('require nodejs enviroment.');
+}
 const express = require('express');
 const app = express();
 const request = require("request");
@@ -14,13 +18,12 @@ const user_agent = ("Mozilla/5.0 (Linux; Android 11; PECM30)" +
     " AppleWebKit/537.36 (KHTML, like Gecko) " +
     "Chrome/99.0.4844.73 Mobile Safari/537.36");
 const API = "https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=";
-let g_d = false;
 function download(file, target, handle) {
     let total = 0;
     let got = 0;
     let buf = fs.createWriteStream(target, {
         'encoding': 'binary',
-        'mode': 0777,
+        'mode': 511,
         autoClose: true
     })
     let req = request(file, {
